@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="wsSERUVNotif_WAP.notifService1" CodeBehind="notifService.svc.cs" %>
