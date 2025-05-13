@@ -2285,6 +2285,102 @@ namespace wsSERUVNotif_WAP
             }
         }
 
+        #region 
+        ///<summary>
+        ///Procedimiento que enviara correos electronicos cuando se cambia la fase de un proceso, envia al sujeto obligado del proceso
+        ///Autor: Raymundo Ochoa Catalina
+        ///</summary>
+        /// <param "strDatos">Cadena que contiene la información necesaria para generar las notificaciones</param>
+        /// <returns>devuelve una lista de objeto correos y una lista de objeto mensaje</returns>
+        private void pFasesProceso(string strDatos)
+        {
+            try
+            {
+                DataSet ds = ConvertXMLToDataSet(strDatos);
+                _ds = ds;
+
+                if (ds != null && ds.Tables !=null)
+                {
+                    DataRow drExcPart = ds.Tables[0].Rows[0];
+
+                    //---------------------------------------------------------Notificacion que se envia al Sujeto Obligado---------------------//
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+                        clsNotificacion objMensaje = new clsNotificacion();
+                        System.Net.Mail.MailMessage correo = new System.Net.Mail.MailMessage();
+                        correo.From = new System.Net.Mail.MailAddress(ConfigurationManager.AppSettings["AppMail"]);
+
+                        if (_strMailsTo !="")
+                        {
+                            correo.To.Add(_strMailsTo);
+                        }
+                        else if (_strMailsTo == "")
+                        {
+                            correo.To.Add(row["sCorreo"].ToString());
+                        }
+                        correo.Subject = ConfigurationManager.AppSettings["Subject"] + " - " + "PROCESO ENTREGA-RECEPCIÓN: " + (drExcPart.Table.Columns.Contains("sDProceso") ? drExcPart["sDProceso"].ToString() : "");
+                        // PARA EL USO DE HTML
+                        correo.SubjectEncoding = System.Text.Encoding.UTF8;
+                        //
+                        correo.Body =
+                        "<style>" +
+                         "  .namefont { font-size : 14pt; text-align:center;  background-color: #B0C4DE }" +
+                         "  .bodyfont { font-size : 12pt;  text-align:justify }" +
+                         "  .s4font { font-size : 10pt; text-align:center}" +
+                         "  .texto { color:#848484; font-weight: bold }"
+                         +
+                         "</style>" +
+                        "<div  align =" + "center" + ">" + "<b>" + " Notificación" + "</b>" + "</div>" +
+                        "<div align =" + "center" + ">Sistema de Entrega - Recepción de la Universidad Veracruzana</div>" +
+                        "</br></br>" +
+                        "<div class=" + "namefont" + ">Estimado(a)  " + "<b>" + row["sNombre"].ToString() + "</b>" + "</div>"
+                        + "</br>"
+                        + "</br>"
+                        + "<div  class=" + "bodyfont" + ">" +
+                        "<font face=" + "arial" + ">"
+
+                        +"Se le informa que la fase " + "<b>" + row["sDNotificacion"].ToString() + "</b>"+" del Proceso Entrega-Recepción: "
+                        +"</br>"
+                        + row["sDProceso"].ToString() 
+                        + "</br>"
+                        +"ha sido habilitada para su registro."
+                        + "</br>"
+                        + "</br>"
+                        + "Favor de entrar al menú "+"<b>"+"Registro"+"</b>"+" para continuar con el Proceso Entrega-Recepción"                        
+                        + "</br>"
+                        + "</div>"
+                        + "</font>"
+                        + "<div class=" + "s4font" + "> </br></br><b> Favor de no enviar correos a esta cuenta, ya que es utilizada por un proceso automatizado y por lo tanto no se revisa</b></div>"
+                        ;
+
+                        // USO DE HTML
+                        correo.BodyEncoding = System.Text.Encoding.UTF8;
+                        correo.IsBodyHtml = true;
+                        //
+                        this._correos.Add(correo);
+
+                        objMensaje.idProceso = Convert.ToInt32(row["idProceso"].ToString());
+                        objMensaje.idUsuDest = Convert.ToInt32(row["idUsuario"].ToString());
+                        objMensaje.idUsuRem = idUsuRem;              //ID DEL USUARIO SERUV
+                        objMensaje.strAsunto = correo.Subject;
+                        objMensaje.strMensaje = correo.Body;
+                        objMensaje.correoTo = correo.To.ToString();
+                        objMensaje.subject = correo.Subject.ToString();
+                        this._Mensajes.Add(objMensaje);
+                    }
+
+                }
+            }
+            catch
+            {
+                _ds.Dispose();
+            }
+            finally
+            {
+                _ds.Dispose();
+            }
+        }
+        #endregion
 
         #region public void SendNotificacion()
         /// <summary>
@@ -2358,6 +2454,9 @@ namespace wsSERUVNotif_WAP
                     break;
                 case "COMENTARIO":
                     pComentarios(72);
+                    break;
+                case "FASES_PROCESO":
+                    pFasesProceso(strDatos);
                     break;
             }
             return SendMails();          // Envia los Correos a los destinatarios
