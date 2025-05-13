@@ -1,0 +1,8 @@
+﻿################################################################################
+# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/wsSERUVNotif_WAP/obj
+/wsSERUVNotif_WAP/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/wsSERUVNotif_WAP/wsSERUVNotif_WAP.csproj.user
